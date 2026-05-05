@@ -1,7 +1,0 @@
-{
-    "target": "predictor",
-    "sources": [{
-            "name": "main",
-            "length": 9045
-        }]
-}
