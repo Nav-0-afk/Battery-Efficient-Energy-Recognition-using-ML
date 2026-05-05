@@ -7,12 +7,10 @@ def select_features():
     X_train = np.load('artifacts/X_train_scaled.npy')
     y_train = np.load('artifacts/y_train_encoded.npy')
     
-    print("Starting RF-RFE. This will take time and compute...")
+    print("Starting RF-RFE.")
     
     rf = RandomForestClassifier(n_estimators=50, n_jobs=-1, random_state=42)
     
-    # NOTE: n_features_to_select is a hyperparameter. 50 is a placeholder. 
-    # You must experiment to find the lowest number that maintains accuracy.
     selector = RFE(estimator=rf, n_features_to_select=100, step=5, verbose=1)
     selector.fit(X_train, y_train)
     

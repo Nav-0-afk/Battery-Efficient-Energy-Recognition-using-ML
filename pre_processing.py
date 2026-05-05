@@ -7,8 +7,7 @@ import os
 def load_and_preprocess_data():
     os.makedirs('artifacts', exist_ok=True)
 
-    # 1. User's exact loading logic
-    # Use the backslash \ and 'r' prefix for the regex separator
+    # 1. Data importing
     feature_info = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/features.txt', sep=r'\s+', header=None, names=['index', 'name'])
     activity_labels = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/activity_labels.txt', sep=r'\s+', header=None, names=['id', 'activity'])
 
@@ -26,8 +25,8 @@ def load_and_preprocess_data():
     X_train_np = X_train.values
     X_test_np = X_test.values
 
-    # 2. MANDATORY SCALING (Fitted ONLY on training data to prevent leakage)
-    print("Applying StandardScaler...")
+    # 2. Scaling
+    print("Scaling the values")
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train_np)
     X_test_scaled = scaler.transform(X_test_np)
@@ -39,7 +38,7 @@ def load_and_preprocess_data():
     np.save('artifacts/y_train_encoded.npy', y_train_encoded)
     np.save('artifacts/y_test_encoded.npy', y_test_encoded)
     
-    print("Preprocessing complete. Artifacts saved.")
+    print("Preprocessing completed.")
 
 if __name__ == "__main__":
     load_and_preprocess_data()
