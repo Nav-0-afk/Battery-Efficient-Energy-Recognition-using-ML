@@ -1,4 +1,6 @@
+
 #include "header.h"
+
 
 static const int32_t num_class[] = {  3, };
 
@@ -36324,3 +36326,4 @@ void postprocess(double* result) {
   // softmax
   postprocess_impl(&result[0], 3);
 }
+
