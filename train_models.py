@@ -23,7 +23,7 @@ def train_hierarchical_models():
     print("Training Stage 0 (Original: Isolation Forest | Alt: SGD One-Class SVM)...")
     
     # Original: Isolation Forest
-    stage0_if = IsolationForest(contamination=0.01, random_state=42, n_jobs=-1)
+    stage0_if = IsolationForest(contamination=0.05, random_state=42, n_jobs=-1, n_estimators=40)
     stage0_if.fit(X_train_reduced) 
     joblib.dump(stage0_if, 'models/stage0_if.joblib')
     
