@@ -23,7 +23,7 @@ def train_hierarchical_models():
     print("Training Stage 0 (Original: Isolation Forest | Alt: SGD One-Class SVM)...")
     
     # Original: Isolation Forest
-    stage0_if = IsolationForest(contamination=0.05, random_state=42, n_jobs=-1, n_estimators=40)
+    stage0_if = IsolationForest(contamination=0.05, random_state=42, n_jobs=-1, n_estimators=40, max_samples=16)
     stage0_if.fit(X_train_reduced) 
     joblib.dump(stage0_if, 'models/stage0_if.joblib')
     
@@ -70,7 +70,7 @@ def train_hierarchical_models():
     joblib.dump(stage2_lgbm, 'models/stage2_lgbm.joblib')
     stage2_lgbm.booster_.save_model('models/stage2_lgbm_native.txt')
 
-    stage2_xgb = XGBClassifier(eval_metric='mlogloss', random_state=42, n_jobs=-1)
+    stage2_xgb = XGBClassifier(eval_metric='mlogloss', random_state=42, n_jobs=-1,n_estimators=40, max_depth=3)
     stage2_xgb.fit(X_train_dynamic, y_train_dynamic)
     joblib.dump(stage2_xgb, 'models/stage2_xgb.joblib')
     

@@ -3,58 +3,53 @@ import onnxruntime as ort
 import time
 import joblib
 
-def benchmark_optimized_architecture():
-    # 1. Setup Session Options for Bare-Metal Simulation
+def benchmark_isolated_hardware_latency():
+    # 1. Setup Session Options to minimize overhead
     opts = ort.SessionOptions()
-    
-    # CRITICAL: Disable multi-threading overhead for batch_size=1
     opts.intra_op_num_threads = 1
-    opts.inter_op_num_threads = 1
     opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
     
-    # Maximize graph optimizations (constant folding, node fusion)
-    opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-
-    # 2. Initialize Sessions with Optimized Providers
-    # Explicitly use the CPU provider to simulate the target wearable environment
-    providers = ['CPUExecutionProvider']
-    
     sessions = {
-        "stage0": ort.InferenceSession("onnx_models/stage0_if.onnx", sess_options=opts, providers=providers),
-        "stage1": ort.InferenceSession("onnx_models/stage1_lr.onnx", sess_options=opts, providers=providers),
-        "stage1b": ort.InferenceSession("onnx_models/stage1b_svm.onnx", sess_options=opts, providers=providers),
-        "stage2": ort.InferenceSession("onnx_models/stage2_xgb.onnx", sess_options=opts, providers=providers)
+        "Stage 0 (IF)": ort.InferenceSession("onnx_models/stage0_if.onnx", sess_options=opts),
+        "Stage 1 (LR)": ort.InferenceSession("onnx_models/stage1_lr.onnx", sess_options=opts),
+        "Stage 1B (SVM)": ort.InferenceSession("onnx_models/stage1b_svm.onnx", sess_options=opts),
+        "Stage 2 (XGB)": ort.InferenceSession("onnx_models/stage2_xgb.onnx", sess_options=opts)
     }
 
-    # 3. Load Test Data
+    # Load 1 single row of test data
     indices = joblib.load('artifacts/selected_indices.joblib')
-    X_test = np.load('artifacts/X_test_scaled.npy')[:, indices].astype(np.float32)
-    samples = X_test[:2000].astype(np.float32)
+    X_test = np.load('artifacts/X_test_scaled.npy')[:, indices]
+    dummy_input = X_test[0:1].astype(np.float32)
 
-    def run_inf(session, data):
-        return session.run(None, {session.get_inputs()[0].name: data})[0]
+    print("EXECUTION LATENCY")
+    
+    raw_latencies = {}
 
-    latencies = []
-    print(f"--- RUNNING OPTIMIZED PIPELINE BENCHMARK ---")
-
-    for i in range(len(samples)):
-        input_row = samples[i:i+1]
+    for name, session in sessions.items():
+        input_name = session.get_inputs()[0].name
         
+        # Warmup
+        for _ in range(100):
+            session.run(None, {input_name: dummy_input})
+            
+        # Timed Execution Loop (1000 iterations inside the model)
         start = time.perf_counter()
-
-        # Architecture Logic (0.85 Threshold)
-        if run_inf(sessions["stage0"], input_row) == 1:
-            probs = run_inf(sessions["stage1"], input_row)
-            if np.max(probs) < 0.85:
-                _ = run_inf(sessions["stage1b"], input_row)
-            else:
-                _ = run_inf(sessions["stage2"], input_row)
+        for _ in range(1000):
+            session.run(None, {input_name: dummy_input})
+        end = time.perf_counter()
         
-        latencies.append((time.perf_counter() - start) * 1_000_000)
+        # Calculate isolated microsecond latency
+        lat = ((end - start) / 1000) * 1_000_000
+        raw_latencies[name] = lat
+        print(f"{name:<15}: {lat:.2f} µs")
 
-    print(f"\n[OPTIMIZED PERFORMANCE METRICS]")
-    print(f"Average Latency: {np.mean(latencies):.2f} µs")
-    print(f"95th Percentile: {np.percentile(latencies, 95):.2f} µs")
+    # Calculate Total Pipeline Paths
+    path_a = raw_latencies["Stage 0 (IF)"] + raw_latencies["Stage 1 (LR)"] + raw_latencies["Stage 2 (XGB)"]
+    path_b = raw_latencies["Stage 0 (IF)"] + raw_latencies["Stage 1 (LR)"] + raw_latencies["Stage 1B (SVM)"]
+    
+    print("THEORETICAL LATENCY")
+    print(f"Path A (Normal -> Gate -> XGB) : {path_a:.2f} µs")
+    print(f"Path B (Normal -> Gate -> SVM) : {path_b:.2f} µs")
 
 if __name__ == "__main__":
-    benchmark_optimized_architecture()
+    benchmark_isolated_hardware_latency()
