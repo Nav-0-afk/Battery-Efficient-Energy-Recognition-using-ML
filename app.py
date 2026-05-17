@@ -69,11 +69,6 @@ def plot_confusion_matrix(y_true, y_pred, title):
     fig.update_layout(title_text=title, xaxis_title="Predicted", yaxis_title="Actual", margin=dict(t=50, l=50))
     return fig
 
-def get_report_df(y_true, y_pred):
-    report = classification_report(y_true, y_pred, output_dict=True)
-    df = pd.DataFrame(report).transpose().drop(['accuracy', 'macro avg', 'weighted avg'], errors='ignore')
-    return df.round(3)
-
 if X_test is not None and models:
     y_test_binary = np.isin(y_test, [0, 1, 2]).astype(int)
     static_mask = (y_test_binary == 0)
@@ -129,7 +124,7 @@ if X_test is not None and models:
         col0_1, col0_2 = st.columns(2)
         if 'stage0_if' in models and 'stage0_ocsvm' in models:
             with col0_1:
-                st.success(f"**Selected (Isolation Forest):** Edge Execution Time: {EDGE_LATENCY['Stage 0 (IF)']} µs. Structurally pruned to 30 trees (`max_samples=16`). Necessary for encapsulating complex 3-dimensional sensor drifts.")
+                st.success(f"**Selected (Isolation Forest):** Edge Execution Time: {EDGE_LATENCY['Stage 0 (IF)']} µs. Structurally pruned to 40 trees (`max_samples=16`). Necessary for encapsulating complex 3-dimensional sensor drifts.")
                 st.error("**Abandoned (SGD One-Class SVM):** While linear execution is extremely fast, linear boundaries fail to accurately encapsulate highly non-linear accelerometer noise profiles.")
             with col0_2:
                 # Simulated relative difference for the abandoned linear model (extremely fast, but inaccurate)
@@ -193,31 +188,36 @@ if X_test is not None and models:
                 
             final_acc = accuracy_score(y_test, final_predictions)
             
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3= st.columns(3)
             col1.metric("End-to-End Accuracy", f"{final_acc*100:.2f}%")
-            col2.metric("Weighted Average Inference", f"{EDGE_LATENCY['Weighted Average']} µs")
-            col3.metric("Hardware Feasibility", "Pass", "Fits ARM Cortex Constraints")
+            col2.metric("Weighted Inference", f"{EDGE_LATENCY['Weighted Average']} µs")
+            col3.metric("Hardware Feasibility", "Pass")
             
+            st.info("**Zero Proprietary Lock-in:** Unlike standard edge-AI solutions that rely on proprietary black-box software (e.g., Edge Impulse, X-CUBE-AI), this architecture utilizes strictly open-source mathematical routing. This guarantees portability across any MCU architecture without licensing restrictions.")
+
             col_cm, col_rep = st.columns([3, 2])
             with col_cm:
                 st.plotly_chart(plot_confusion_matrix(y_test, final_predictions, "Final Pipeline Confusion Matrix"), use_container_width=True)
             with col_rep:
                 st.markdown("### Classification Report")
-                st.dataframe(get_report_df(y_test, final_predictions), height=300, use_container_width=True)
+                # Using st.code with plaintext ensures the whitespace alignment 
+                # of the raw classification_report string is perfectly preserved.
+                report_text = classification_report(y_test, final_predictions)
+                st.code(report_text, language="plaintext")
 
     # ==========================================
     # TAB 4: ONNX vs BARE-METAL
     # ==========================================
     with tab4:
-        st.header("The Hardware Reality: Translation Overhead")
+        st.header("The Hardware Reality: Translation Overhead & Proprietary Lock-in")
         st.write("Hardware compilers execute tree ensembles vastly differently than Python interpreters.")
         
         col1, col2 = st.columns([1, 1])
         with col1:
             st.markdown("""
-            ### The Latency Breakdown
-            * **ONNX Execution:** Scikit-Learn Isolation Forests lack native ONNX C++ operators and are emulated via Tensor mathematics. Even after structural pruning, this requires **900–1000 µs**.
-            * **Bare-Metal C (`m2cgen`):** Translating the `.joblib` files directly into zero-dependency C-code `if-else` branches collapses the weighted execution to an incredibly efficient **6.59 µs**.
+            ### The Latency & Software Breakdown
+            * **ONNX Execution (Standard):** Scikit-Learn Isolation Forests lack native ONNX C++ operators and are emulated via Tensor mathematics. Even after structural pruning, this requires **900–1000 µs**. Deploying this natively often forces reliance on **proprietary compiler toolchains** (like ARM CMSIS-NN or vendor-specific ML stacks) to optimize the tensor math, creating a black-box environment.
+            * **Bare-Metal C (`m2cgen`):** Translating the `.joblib` files directly into zero-dependency C-code `if-else` branches bypasses all proprietary software. It collapses the weighted execution to an incredibly efficient **6.59 µs**.
             
             ### Wearable Duty Cycle (100Hz / 10ms Window)
             * **ONNX Limit:** The CPU completes processing in ~10% of the window.
@@ -237,7 +237,7 @@ if X_test is not None and models:
             })
             fig.update_traces(textposition='outside')
             st.plotly_chart(fig, use_container_width=True)
-
+    
     # ==========================================
     # TAB 5: FUTURE WORKS
     # ==========================================

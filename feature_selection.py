@@ -11,14 +11,12 @@ def select_features():
     print("Starting RandomizedSearchCV for RFE + RFC...")
     
     # 1. Initialize the base estimator
-    # Use n_jobs=-1 here to parallelize tree building
     rf = RandomForestClassifier(random_state=42, n_jobs=-1)
     
     # 2. Initialize RFE
     rfe = RFE(estimator=rf)
     
     # 3. Define the hyperparameter search space
-    # Target RFE parameters directly, target RFC parameters using 'estimator__'
     param_distributions = {
         'n_features_to_select': [100, 150, 200, 250],
         'step': [5, 10, 20],
@@ -28,12 +26,11 @@ def select_features():
     }
     
     # 4. Configure Randomized Search
-    # n_jobs=1 is set here to prevent nested parallelization conflicts with RF's n_jobs=-1
     search = RandomizedSearchCV(
         estimator=rfe,
         param_distributions=param_distributions,
-        n_iter=10,          # Number of random combinations to test
-        cv=3,               # 3-fold cross-validation
+        n_iter=10,
+        cv=3,
         scoring='accuracy',
         verbose=2,
         random_state=42,
