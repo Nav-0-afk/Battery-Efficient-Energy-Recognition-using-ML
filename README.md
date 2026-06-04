@@ -12,6 +12,10 @@ Continuous Human Activity Recognition (HAR) on wearable devices imposes signific
 
 This project solves this bottleneck by replacing standard deep learning models with a **structurally pruned, cascaded routing architecture** evaluated on the UCI HAR Dataset. By actively deflecting simple data and filtering noise, the system drastically reduces active CPU time, enabling a **>90% deep-sleep duty cycle** while maintaining **94% clinical accuracy**.
 
+### Dataset Requirement
+This project requires the [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones). 
+Download and extract the zip file into a folder named `dataset/UCI HAR Dataset/` in the root directory before running the pre-processing scripts.
+
 ---
 
 ## ✨ Key Features
