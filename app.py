@@ -96,7 +96,7 @@ if X_test is not None and models:
             ### Pipeline Nodes
             * **Stage 0:** Isolation Forest (100 trees, unconstrained depth)
             * **Stage 1:** Logistic Regression
-            * **Stage 2:** XGBoost (100 trees, max_depth=6)
+            * **Stage 2:** LightGBM (100 trees, max_depth=6)
             """)
             st.error("**Abandonment Reason:** Traversal of 64 nodes ($2^6$) per tree across 100 trees exceeded milliwatt power budgets.")
             

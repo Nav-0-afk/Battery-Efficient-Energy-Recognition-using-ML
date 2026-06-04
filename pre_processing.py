@@ -8,17 +8,17 @@ def load_and_preprocess_data():
     os.makedirs('artifacts', exist_ok=True)
 
     # 1. Data importing
-    feature_info = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/features.txt', sep=r'\s+', header=None, names=['index', 'name'])
-    activity_labels = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/activity_labels.txt', sep=r'\s+', header=None, names=['id', 'activity'])
+    feature_info = pd.read_csv('dataset/UCI HAR Dataset/features.txt', sep=r'\s+', header=None, names=['index', 'name'])
+    activity_labels = pd.read_csv('dataset/UCI HAR Dataset/activity_labels.txt', sep=r'\s+', header=None, names=['id', 'activity'])
 
-    X_train = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/train/X_train.txt', sep=r'\s+', header=None)
+    X_train = pd.read_csv('dataset/UCI HAR Dataset/train/X_train.txt', sep=r'\s+', header=None)
     X_train.columns = feature_info['name']
 
-    y_train = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/train/y_train.txt', sep=r'\s+', header=None, names=['activity_id'])
+    y_train = pd.read_csv('dataset/UCI HAR Dataset/train/y_train.txt', sep=r'\s+', header=None, names=['activity_id'])
     y_train['activity_name'] = y_train['activity_id'].map(activity_labels.set_index('id')['activity'])
 
-    X_test = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/test/X_test.txt', sep=r'\s+', header=None)
-    y_test = pd.read_csv('C:/Users/navan/ML/datasets/UCI HAR Dataset/test/y_test.txt', sep=r'\s+', header=None, names=['activity_id'])# Encoding: 0 to 5 instead of 1 to 6
+    X_test = pd.read_csv('dataset/UCI HAR Dataset/test/X_test.txt', sep=r'\s+', header=None)
+    y_test = pd.read_csv('dataset/UCI HAR Dataset/test/y_test.txt', sep=r'\s+', header=None, names=['activity_id'])# Encoding: 0 to 5 instead of 1 to 6
     y_train_encoded = (y_train['activity_id'] - 1).values.ravel()
     y_test_encoded = (y_test['activity_id'] - 1).values.ravel()
 

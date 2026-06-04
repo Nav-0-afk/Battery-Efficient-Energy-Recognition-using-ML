@@ -19,11 +19,11 @@ def train_hierarchical():
     
     X_train_reduced = X_train_full[:, selected_indices]
     
-    # Dictionary to store the best parameters for the final printout
+    # Dictionary to store the best parameters
     best_params_summary = {}
 
-    # --- STAGE 0: Anomaly Gate (UNSUPERVISED - NO CV) ---
-    print("\n--- Training Stage 0 (Static Fit) ---")
+    # STAGE 0: Anomaly Gate (UNSUPERVISED - NO CV)
+    print("\n Training Stage 0 (Static Fit) ")
     stage0_if = IsolationForest(contamination=0.05, random_state=42, n_jobs=-1, n_estimators=40, max_samples=16)
     stage0_if.fit(X_train_reduced) 
     joblib.dump(stage0_if, 'models/stage0_if.joblib')
@@ -32,8 +32,8 @@ def train_hierarchical():
     stage0_ocsvm.fit(X_train_reduced)
     joblib.dump(stage0_ocsvm, 'models/stage0_ocsvm.joblib')
 
-    # --- STAGE 1: Gatekeepers (SUPERVISED) ---
-    print("\n--- Tuning Stage 1 ---")
+    # STAGE 1: Gatekeepers (SUPERVISED)
+    print("\n Tuning Stage 1 ")
     y_train_binary = np.isin(y_train, [0, 1, 2]).astype(int) 
     
     lr_params = {'C': [0.01, 0.1, 1, 10], 'max_iter': [1000, 2000]}
@@ -48,8 +48,8 @@ def train_hierarchical():
     joblib.dump(dt_search.best_estimator_, 'models/stage1_dt.joblib')
     best_params_summary['Stage 1 - Decision Tree'] = dt_search.best_params_
 
-    # --- STAGE 1B: Static Specialists ---
-    print("\n--- Tuning Stage 1B ---")
+    # STAGE 1B: Static Specialists
+    print("\n Tuning Stage 1B ")
     static_mask = (y_train_binary == 0)
     X_train_static = X_train_reduced[static_mask]
     y_train_static = y_train[static_mask]
@@ -66,8 +66,8 @@ def train_hierarchical():
     joblib.dump(sgd_search.best_estimator_, 'models/stage1b_sgd.joblib')
     best_params_summary['Stage 1B - SGD Classifier'] = sgd_search.best_params_
 
-    # --- STAGE 2: Dynamic Specialists ---
-    print("\n--- Tuning Stage 2 (Heavy Computation) ---")
+    # STAGE 2: Dynamic Specialists 
+    print("\n Tuning Stage 2 (Heavy Computation) ")
     dynamic_mask = (y_train_binary == 1)
     X_train_dynamic = X_train_reduced[dynamic_mask]
     y_train_dynamic = y_train[dynamic_mask]
@@ -85,15 +85,13 @@ def train_hierarchical():
     joblib.dump(xgb_search.best_estimator_, 'models/stage2_xgb.joblib')
     best_params_summary['Stage 2 - XGBoost'] = xgb_search.best_params_
 
-    # --- FINAL HYPERPARAMETER PRINTOUT ---
-    print("\n" + "="*60)
+    #  FINAL HYPERPARAMETER PRINTOUT 
     print("FINAL TUNED HYPERPARAMETERS SUMMARY")
     print("="*60)
     for model_name, params in best_params_summary.items():
         print(f"\n[{model_name}]")
         for param_name, param_value in params.items():
             print(f"   --> {param_name}: {param_value}")
-    print("\n" + "="*60)
     print("All pipelines tuned, trained, and saved.")
 
 if __name__ == "__main__":
