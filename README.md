@@ -14,7 +14,7 @@ This project solves this bottleneck by replacing standard deep learning models w
 
 ### Dataset Requirement
 This project requires the [UCI HAR Dataset](https://archive.ics.uci.edu/dataset/240/human+activity+recognition+using+smartphones). 
-Download and extract the zip file into a folder named `dataset/UCI HAR Dataset/` in the root directory before running the pre-processing scripts.
+Download and extract the zip file into a folder named `dataset/` in the root directory before running the pre-processing scripts.
 
 ---
 
